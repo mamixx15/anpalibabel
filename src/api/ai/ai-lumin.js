@@ -6,25 +6,23 @@ module.exports = function (app) {
       const response = await axios.post('https://luminai.my.id/', { content });
       return response.data;
     } catch (error) {
-      console.error('Error fetching content from LuminAI:', error);
+      console.error('Error fetching content from LuminAI:', error?.response?.data || error.message);
       throw error;
     }
   }
 
   app.get('/ai/luminai', async (req, res) => {
     const { text } = req.query;
-    if (!text) {
+    if (typeof text !== 'string' || text.trim() === '') {
       return res.status(400).json({ status: false, error: 'Text is required' });
     }
 
     try {
-      const { result } = await fetchContent(text);
-      res.json({
-        status: true,
-        result
-      });
+      const response = await fetchContent(text);
+      const result = response.result || response;
+      res.json({ status: true, result });
     } catch (error) {
-      res.status(500).json({ status: false, error: error.message });
+      res.status(500).json({ status: false, error: error?.message || 'Internal Server Error' });
     }
   });
 };
